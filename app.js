@@ -1,5 +1,5 @@
-const BASE_URL = "https://api.openweathermap.org/data/2.5";
-const API_KEY = "20f45ed1904591737c8bdd5780e6759b";
+import getWeatherData from "./utils/httpReq.js";
+import { showModal, removeModal } from "./utils/modal.js";
 const DAYS = [
   "Sunday",
   "Monday",
@@ -15,36 +15,13 @@ const searchButton = document.querySelector("button");
 const weatherContainer = document.getElementById("weather");
 const locationIcon = document.getElementById("location");
 const forecastContainer = document.getElementById("forecast");
-
-const getCurrentWeatherByName = async (city) => {
-  const url = `${BASE_URL}/weather?q=${city}&appid=${API_KEY}&units=metric`;
-  const response = await fetch(url);
-  const json = await response.json();
-  return json;
-};
-
-const getCurrentWeatherByCoordinates = async (lat, lon) => {
-  const url = `${BASE_URL}/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`;
-  const response = await fetch(url);
-  const json = await response.json();
-  return json;
-};
-
-const getforecastWeatherByName = async (city) => {
-  const url = `${BASE_URL}/forecast?q=${city}&appid=${API_KEY}&units=metric`;
-  const response = await fetch(url);
-  const json = await response.json();
-  return json;
-};
-
-const getforecastWeatherByCoordinates = async (lat, lon) => {
-  const url = `${BASE_URL}/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`;
-  const response = await fetch(url);
-  const json = await response.json();
-  return json;
-};
+const modalButton = document.getElementById("modal-button");
+const loader = document.getElementById("loader");
 
 const renderCurrentWeather = (data) => {
+  if (!data) {
+    return;
+  }
   const weatherJSx = `
   <h1>${data.name} , ${data.sys.country} </h1>
   <div id="main">
@@ -58,12 +35,14 @@ const renderCurrentWeather = (data) => {
   <p>Humidity : <span>${data.main.humidity} %</span> </p>
   <p>wind speed : <span>${data.wind.speed} m/s</span> </p>
   </div>
-
   `;
   weatherContainer.innerHTML = weatherJSx;
 };
 
 const renderForecastWeather = (data) => {
+  if (!data) {
+    return;
+  }
   forecastContainer.innerHTML = "";
   data = data.list.filter((obj) => obj.dt_txt.endsWith("12:00:00"));
   console.log(data);
@@ -85,36 +64,42 @@ const renderForecastWeather = (data) => {
 const searchHandler = async () => {
   const cityName = searchInput.value;
   if (!cityName) {
-    alert("Please enter city name!");
+    showModal("Please enter city name!");
+    return;
   }
-  const currentData = await getCurrentWeatherByName(cityName);
+  const currentData = await getWeatherData("current", cityName);
   renderCurrentWeather(currentData);
-  const forecastData = await getforecastWeatherByName(cityName);
+  const forecastData = await getWeatherData("forecast", cityName);
   renderForecastWeather(forecastData);
 };
 
 const positionCallback = async (position) => {
-  const { latitude, longitude } = position.coords;
-  const currentData = await getCurrentWeatherByCoordinates(latitude, longitude);
+  const currentData = await getWeatherData("current", position.coords);
   renderCurrentWeather(currentData);
-  const forecastData = await getforecastWeatherByCoordinates(
-    latitude,
-    longitude
-  );
+  const forecastData = await getWeatherData("forecast", position.coords);
   renderForecastWeather(forecastData);
 };
 
 const errorCallback = (error) => {
-  console.log(error.message);
+  showModal(error.message);
 };
 
 const locationHandler = () => {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(positionCallback, errorCallback);
   } else {
-    alert("your browser does not support geolocation");
+    showModal("your browser does not support geolocation");
   }
+};
+
+const initHandler = async () => {
+  const currentData = await getWeatherData("current", "karaj");
+  renderCurrentWeather(currentData);
+  const forecastData = await getWeatherData("forecast", "karaj");
+  renderForecastWeather(forecastData);
 };
 
 searchButton.addEventListener("click", searchHandler);
 locationIcon.addEventListener("click", locationHandler);
+modalButton.addEventListener("click", removeModal);
+document.addEventListener("DOMContentLoaded", initHandler);
