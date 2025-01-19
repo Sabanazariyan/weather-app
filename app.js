@@ -45,7 +45,6 @@ const renderForecastWeather = (data) => {
   }
   forecastContainer.innerHTML = "";
   data = data.list.filter((obj) => obj.dt_txt.endsWith("12:00:00"));
-  console.log(data);
   data.forEach((i) => {
     const forecastJsx = `
     <div>
