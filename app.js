@@ -61,6 +61,7 @@ const renderForecastWeather = (data) => {
 };
 
 const searchHandler = async () => {
+  weatherContainer.innerHTML = "<span id='loader'></span>"
   const cityName = searchInput.value;
   if (!cityName) {
     showModal("Please enter city name!");
@@ -73,6 +74,7 @@ const searchHandler = async () => {
 };
 
 const positionCallback = async (position) => {
+  weatherContainer.innerHTML = "<span id='loader'></span>"
   const currentData = await getWeatherData("current", position.coords);
   renderCurrentWeather(currentData);
   const forecastData = await getWeatherData("forecast", position.coords);
